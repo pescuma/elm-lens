@@ -1,0 +1,14 @@
+{
+    "version": "0.1.0",
+    "summary": "Unconventional lens for elm-lang",
+    "repository": "https://github.com/pescuma/elm-lens.git",
+    "license": "MIT",
+    "source-directories": [
+        "src"
+    ],
+    "exposed-modules": [],
+    "dependencies": {
+        "elm-lang/core": "5.1.1 <= v < 6.0.0"
+    },
+    "elm-version": "0.18.0 <= v < 0.19.0"
+}
