@@ -2,7 +2,7 @@ module ExtensionsTest exposing (..)
 
 import Test exposing (..)
 import Expect
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 import Lens.Extensions.Tuple2 as Tuple2
 import Lens.Extensions.Tuple3 as Tuple3
 import Lens.Extensions.Tuple4 as Tuple4

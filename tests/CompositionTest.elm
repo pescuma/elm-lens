@@ -2,7 +2,7 @@ module CompositionTest exposing (..)
 
 import Test exposing (..)
 import Expect
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 import Lens.Extensions.Tuple2 as Tuple2
 import Lens.Extensions.Record as Record
 import Lens.Extensions.Maybe as Maybe

@@ -1,7 +1,7 @@
 module Lens.Extensions.Maybe exposing (..)
 
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 
 
-justLens : Lens ValueMaybeExists (Maybe value) value
+justLens : Lens Lens.ValueMaybeExists (Maybe value) value
 justLens = Lens.sumTypeLens2 identity Just Nothing

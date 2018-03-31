@@ -2,7 +2,7 @@ module OperatorsTest exposing (..)
 
 import Test exposing (..)
 import Expect
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 import Lens.Operators exposing (..)
 import Lens.Extensions.Tuple2 as Tuple2
 import Lens.Extensions.Record as Record

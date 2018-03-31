@@ -1,14 +1,14 @@
 module Lens.Extensions.Color exposing (..)
 
 import Color exposing (Color)
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 
 
-rgbaLens : Lens ValueAlwaysExists Color { red : Int, green : Int, blue : Int, alpha : Float }
-rgbaLens = Lens.wholeValueLens Color.toRgb (\c -> Color.rgba c.red c.green c.blue c.alpha)
+rgbaLens : Lens Lens.ValueAlwaysExists Color { red : Int, green : Int, blue : Int, alpha : Float }
+rgbaLens = Lens.converterLens Color.toRgb (\c -> Color.rgba c.red c.green c.blue c.alpha)
 
 
-rgbaTupleLens : Lens ValueAlwaysExists Color ( Int, Int, Int, Float )
+rgbaTupleLens : Lens Lens.ValueAlwaysExists Color ( Int, Int, Int, Float )
 rgbaTupleLens =
     let
         get color =
@@ -17,10 +17,10 @@ rgbaTupleLens =
             in
                 ( c.red, c.green, c.blue, c.alpha )
     in
-        Lens.wholeValueLens get (\( r, g, b, a ) -> Color.rgba r g b a)
+        Lens.converterLens get (\( r, g, b, a ) -> Color.rgba r g b a)
 
 
-redLens : Lens ValueAlwaysExists Color Int
+redLens : Lens Lens.ValueAlwaysExists Color Int
 redLens =
     let
         get color =
@@ -38,7 +38,7 @@ redLens =
         Lens.fixedFieldsLens get set
 
 
-greenLens : Lens ValueAlwaysExists Color Int
+greenLens : Lens Lens.ValueAlwaysExists Color Int
 greenLens =
     let
         get color =
@@ -56,7 +56,7 @@ greenLens =
         Lens.fixedFieldsLens get set
 
 
-blueLens : Lens ValueAlwaysExists Color Int
+blueLens : Lens Lens.ValueAlwaysExists Color Int
 blueLens =
     let
         get color =
@@ -74,7 +74,7 @@ blueLens =
         Lens.fixedFieldsLens get set
 
 
-alphaLens : Lens ValueAlwaysExists Color Float
+alphaLens : Lens Lens.ValueAlwaysExists Color Float
 alphaLens =
     let
         get color =

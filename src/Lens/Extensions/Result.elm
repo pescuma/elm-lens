@@ -1,13 +1,13 @@
 module Lens.Extensions.Result exposing (..)
 
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 
 
-okLens : Lens ValueMaybeExists (Result error value) value
+okLens : Lens Lens.ValueMaybeExists (Result error value) value
 okLens = Lens.sumTypeLens Result.toMaybe Ok
 
 
-errLens : Lens ValueMaybeExists (Result error value) error
+errLens : Lens Lens.ValueMaybeExists (Result error value) error
 errLens =
     let
         getIfPossible result =

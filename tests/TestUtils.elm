@@ -2,10 +2,10 @@ module TestUtils exposing (..)
 
 import Test exposing (..)
 import Expect
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 
 
-testAlwaysExists : Lens ValueAlwaysExists whole part -> whole -> part -> part -> whole -> whole -> List Test
+testAlwaysExists : Lens Lens.ValueAlwaysExists whole part -> whole -> part -> part -> whole -> whole -> List Test
 testAlwaysExists lens whole currentPart newPart wholeAfterSetOrUpdate wholeAfterRemove =
     List.append (testMaybeExists lens whole (Just currentPart) newPart wholeAfterSetOrUpdate wholeAfterSetOrUpdate wholeAfterRemove)
         [ test "get" <|
@@ -23,35 +23,35 @@ testAlwaysExists lens whole currentPart newPart wholeAfterSetOrUpdate wholeAfter
         ]
 
 
-testMaybeExists : Lens behaviour whole part -> whole -> Maybe part -> part -> whole -> whole -> whole -> List Test
+testMaybeExists : Lens hasValue whole part -> whole -> Maybe part -> part -> whole -> whole -> whole -> List Test
 testMaybeExists lens whole currentPart newPart wholeAfterSet wholeAfterUpdate wholeAfterRemove =
-    [ test "getIfPossible" <|
-        \_ -> Expect.equal currentPart <| Lens.getIfPossible lens whole
-    , test "setIfPossible" <|
-        \_ -> Expect.equal wholeAfterSet <| Lens.setIfPossible lens newPart whole
-    , test "updateIfPossible" <|
-        \_ -> Expect.equal wholeAfterUpdate <| Lens.updateIfPossible lens (always newPart) whole
-    , test "removeIfPossible" <|
+    [ test "maybe - getIfPossible" <|
+        \_ -> Expect.equal currentPart <| Lens.getMaybe lens whole
+    , test "maybe - set" <|
+        \_ -> Expect.equal wholeAfterSet <| Lens.set lens newPart whole
+    , test "maybe - update" <|
+        \_ -> Expect.equal wholeAfterUpdate <| Lens.update lens (always newPart) whole
+    , test "maybe - remove" <|
         \_ ->
-            Expect.equal wholeAfterRemove <| Lens.removeIfPossible lens whole
-    , test "If a set replaces an element, a later get will return the new element (wrapped in a Just)" <|
+            Expect.equal wholeAfterRemove <| Lens.remove lens whole
+    , test "maybe - If a set replaces an element, a later get will return the new element (wrapped in a Just)" <|
         \_ ->
             case currentPart of
                 Nothing ->
                     -- Can change or not the value
-                    case Lens.getIfPossible lens (Lens.setIfPossible lens newPart whole) of
+                    case Lens.getMaybe lens (Lens.set lens newPart whole) of
                         Nothing -> Expect.pass
                         Just v -> Expect.equal newPart v
                 _ ->
-                    Expect.equal (Just newPart) <| Lens.getIfPossible lens (Lens.setIfPossible lens newPart whole)
-    , test "If the lens gets a value, then sets it back, the result is equal to the original whole: " <|
+                    Expect.equal (Just newPart) <| Lens.getMaybe lens (Lens.set lens newPart whole)
+    , test "maybe - If the lens gets a value, then sets it back, the result is equal to the original whole: " <|
         \_ ->
-            case Lens.getIfPossible lens whole of
+            case Lens.getMaybe lens whole of
                 Nothing -> Expect.pass
-                Just v -> Expect.equal whole <| Lens.setIfPossible lens v whole
-    , test "The effect of a setIfPossible doesn’t depend on earlier setIfPossible" <|
+                Just v -> Expect.equal whole <| Lens.set lens v whole
+    , test "maybe - The effect of a set doesn’t depend on earlier set" <|
         \_ ->
             case currentPart of
                 Nothing -> Expect.pass
-                Just v -> Expect.equal whole <| Lens.setIfPossible lens v (Lens.setIfPossible lens newPart whole)
+                Just v -> Expect.equal whole <| Lens.set lens v (Lens.set lens newPart whole)
     ]

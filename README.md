@@ -17,16 +17,16 @@ Just (Dict.fromList [("k",{ name = "Name" })])
     : Maybe.Maybe (Dict.Dict String { name : String })
 >
 > lens = Maybe.justLens ^?>> Dict.valueLens "k" ^?>> Record.nameLens
-Lens { target = FixedFields, getIfPossible = <function>, get = <function>, setIfPossible = <function>, removeIfPossible = <function> }
+Lens { target = FixedFields, get = <function>, getIfPossible = <function>, setIfPossible = <function>, removeIfPossible = <function> }
     : Lens.Lens
         Lens.ValueMaybeExists
         (Maybe.Maybe (Dict.Dict String { whole | name : part }))
         part
 >
-> Lens.getIfPossible lens val
+> Lens.getMaybe lens val
 Just "Name" : Maybe.Maybe String
 >
-> Lens.setIfPossible lens "New name" val
+> Lens.set lens "New name" val
 Just (Dict.fromList [("k",{ name = "New name" })])
     : Maybe.Maybe (Dict.Dict String { name : String })
 ```

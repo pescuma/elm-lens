@@ -6,16 +6,14 @@ module Lens exposing
         , ValueMaybeExists
 
           -- API
-        , getIfPossible
         , get
-        , setIfPossible
+        , getMaybe
         , set
-        , updateIfPossible
         , update
-        , removeIfPossible
+        , remove
 
           -- Constructors
-        , wholeValueLens
+        , converterLens
         , sumTypeLens
         , sumTypeLens2
         , fixedFieldsLens
@@ -31,24 +29,23 @@ module Lens exposing
 -- Types
 
 
-type Lens behaviour whole part = Lens (LensData whole part)
+type Lens hasValue whole part = Lens (LensData whole part)
 
 
 type alias LensData whole part =
-    { target : Target
-    , getIfPossible : whole -> Maybe part
+    { target : Kind
     , get : whole -> part
+    , getIfPossible : whole -> Maybe part
     , setIfPossible : part -> whole -> whole
     , removeIfPossible : whole -> whole
     }
 
 
-type Target
-    = WholeValue
+type Kind
+    = Converter
     | SumType
     | FixedFields
     | FlexibleFields
-
 
 type ValueAlwaysExists = ValueAlwaysExistTag Never
 type ValueMaybeExists = ValueMaybeExistsTag Never
@@ -58,50 +55,44 @@ type ValueMaybeExists = ValueMaybeExistsTag Never
 -- API
 
 
-getIfPossible : Lens behaviour whole part -> whole -> Maybe part
-getIfPossible (Lens lens) whole = lens.getIfPossible whole
-
-
 get : Lens ValueAlwaysExists whole part -> whole -> part
 get (Lens lens) whole = lens.get whole
 
+getMaybe : Lens hasValue whole part -> whole -> Maybe part
+getMaybe (Lens lens) whole = lens.getIfPossible whole
 
-setIfPossible : Lens behaviour whole part -> part -> whole -> whole
-setIfPossible (Lens lens) part whole = lens.setIfPossible part whole
+set : Lens hasValue whole part -> part -> whole -> whole
+set (Lens lens) part whole = lens.setIfPossible part whole
 
-
-set : Lens ValueAlwaysExists whole part -> part -> whole -> whole
-set = setIfPossible
-
-
-updateIfPossible : Lens behaviour whole part -> (part -> part) -> whole -> whole
-updateIfPossible (Lens lens) f whole =
+update : Lens hasValue whole part -> (part -> part) -> whole -> whole
+update (Lens lens) f whole =
     lens.getIfPossible whole
         |> Maybe.map (\part -> lens.setIfPossible (f part) whole)
         |> Maybe.withDefault whole
 
+remove : Lens hasValue whole part -> whole -> whole
+remove (Lens lens) whole = lens.removeIfPossible whole
 
-update : Lens ValueAlwaysExists whole part -> (part -> part) -> whole -> whole
-update = updateIfPossible
-
-
-removeIfPossible : Lens behaviour whole part -> whole -> whole
-removeIfPossible (Lens lens) whole = lens.removeIfPossible whole
+setOrRemove : Lens hasValue whole part -> Maybe part -> whole -> whole
+setOrRemove (Lens lens) maybePart whole =
+    case maybePart of
+        Just part -> lens.setIfPossible part whole
+        Nothing -> lens.removeIfPossible whole
 
 
 -- Constructors
 
 
-wholeValueLens :
+converterLens :
     (whole -> part)
     -> (part -> whole)
     -> Lens ValueAlwaysExists whole part
-wholeValueLens get create =
+converterLens get reverseGet =
     Lens
-        { target = WholeValue
-        , getIfPossible = Just << get
+        { target = Converter
         , get = get
-        , setIfPossible = \part whole -> create part
+        , getIfPossible = Just << get
+        , setIfPossible = \part whole -> reverseGet part
         , removeIfPossible = \whole -> whole
         }
 
@@ -113,8 +104,8 @@ sumTypeLens :
 sumTypeLens getIfPossible create =
     Lens
         { target = SumType
+        , get = neverWillBeCalled
         , getIfPossible = getIfPossible
-        , get = \whole -> Debug.crash "Famous last words: whis will never be called!"
         , setIfPossible = \part whole -> create part
         , removeIfPossible = \whole -> whole
         }
@@ -128,8 +119,8 @@ sumTypeLens2 :
 sumTypeLens2 getIfPossible create removedValue =
     Lens
         { target = SumType
+        , get = neverWillBeCalled
         , getIfPossible = getIfPossible
-        , get = \whole -> Debug.crash "Famous last words: whis will never be called!"
         , setIfPossible = \part whole -> create part
         , removeIfPossible = \whole -> removedValue
         }
@@ -142,8 +133,8 @@ fixedFieldsLens :
 fixedFieldsLens get set =
     Lens
         { target = FixedFields
-        , getIfPossible = Just << get
         , get = get
+        , getIfPossible = Just << get
         , setIfPossible = \part whole -> set part whole
         , removeIfPossible = \whole -> whole
         }
@@ -157,33 +148,38 @@ flexibleFieldsLens :
 flexibleFieldsLens getIfPossible setIfPossible removeIfPossible =
     Lens
         { target = FlexibleFields
+        , get = neverWillBeCalled
         , getIfPossible = getIfPossible
-        , get = \whole -> Debug.crash "Famous last words: whis will never be called!"
         , setIfPossible = setIfPossible
         , removeIfPossible = removeIfPossible
         }
 
+
+neverWillBeCalled  : a -> b
+neverWillBeCalled a = Debug.crash "Famous last words: this will never be called!"
 
 
 -- Composition
 
 
 identity : Lens ValueAlwaysExists a a
-identity = wholeValueLens Basics.identity Basics.identity
+identity = converterLens Basics.identity Basics.identity
 
 
 composeAlwaysExists : Lens ValueAlwaysExists a b -> Lens ValueAlwaysExists b c -> Lens ValueAlwaysExists a c
 composeAlwaysExists = composeLosingType
 
+
 composeMaybeExists : Lens behaviour1 a b -> Lens behaviour2 b c -> Lens ValueMaybeExists a c
 composeMaybeExists = composeLosingType
+
 
 composeLosingType : Lens behaviour1 a b -> Lens behaviour2 b c -> Lens behaviour3 a c
 composeLosingType (Lens a2b) (Lens b2c) =
     let
         target =
             case ( a2b.target, b2c.target ) of
-                ( v, WholeValue ) -> v
+                ( v, Converter ) -> v
                 ( _, v ) -> v
 
         setIfPossible c a =
@@ -194,7 +190,7 @@ composeLosingType (Lens a2b) (Lens b2c) =
 
         removeIfPossible a =
             case b2c.target of
-                WholeValue -> a2b.removeIfPossible a
+                Converter -> a2b.removeIfPossible a
                 FixedFields -> a
                 _ ->
                     a2b.getIfPossible a
@@ -204,8 +200,9 @@ composeLosingType (Lens a2b) (Lens b2c) =
     in
         Lens
             { target = target
-            , getIfPossible = a2b.getIfPossible >> Maybe.andThen b2c.getIfPossible
             , get = a2b.get >> b2c.get
+            , getIfPossible = a2b.getIfPossible >> Maybe.andThen b2c.getIfPossible
             , setIfPossible = setIfPossible
             , removeIfPossible = removeIfPossible
             }
+

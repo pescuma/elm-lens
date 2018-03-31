@@ -1,12 +1,12 @@
 module Lens.Extensions.Array exposing (..)
 
 import Array exposing (Array)
-import Lens exposing (Lens, ValueAlwaysExists, ValueMaybeExists)
+import Lens exposing (Lens)
 
 
-elementLens : Int -> Lens ValueMaybeExists (Array value) value
+elementLens : Int -> Lens Lens.ValueMaybeExists (Array value) value
 elementLens index = Lens.flexibleFieldsLens (Array.get index) (Array.set index) (\whole -> whole)
 
 
-headLens : Lens ValueMaybeExists (Array value) value
+headLens : Lens Lens.ValueMaybeExists (Array value) value
 headLens = elementLens 0
